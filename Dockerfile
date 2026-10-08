@@ -48,6 +48,11 @@ RUN \
         --no-build \
         -r homeassistant/requirements_all.txt
 
+# Port DeebotUniverse/client.py PR #1743 into deebot-client 18.6.0 so the ecovacs
+# integration can renew portal tokens without the password login endpoint (1013).
+COPY script/deebot_client_1743_patch.py /tmp/deebot_client_1743_patch.py
+RUN python3 /tmp/deebot_client_1743_patch.py && rm /tmp/deebot_client_1743_patch.py
+
 ## Setup Home Assistant Core
 COPY --parents LICENSE* README* homeassistant/ pyproject.toml homeassistant/
 RUN \
