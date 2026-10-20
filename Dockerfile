@@ -48,6 +48,43 @@ RUN \
         --no-build \
         -r homeassistant/requirements_all.txt
 
+## Force TCP media transport for RTSP inputs in haffmpeg
+# haffmpeg launches ffmpeg without -rtsp_transport tcp, so RTSP media is
+# carried over UDP, which does not reach the camera from the container's
+# network (the TCP control session connects fine, so ffmpeg just waits for
+# media that never arrives and every grab times out). Patch
+# haffmpeg.core.HAFFmpeg._put_input to prepend "-rtsp_transport tcp" for
+# rtsp:// inputs; the flag must precede -i to take effect.
+RUN python3 - <<'PY'
+import pathlib
+
+import haffmpeg
+
+base = pathlib.Path(haffmpeg.__file__).parent
+cp = base / "core.py"
+src = cp.read_text()
+old = (
+    "    def _put_input(self, input_source: str) -> None:\n"
+    '        """Put input string to ffmpeg command."""\n'
+    "        input_cmd = shlex.split(str(input_source))"
+)
+new = (
+    "    def _put_input(self, input_source: str) -> None:\n"
+    '        """Put input string to ffmpeg command."""\n'
+    '        if str(input_source).startswith("rtsp://"):\n'
+    '            # RTSP media over UDP does not reach the camera from the\n'
+    '            # container network; force the TCP transport (flag before -i).\n'
+    '            self._argv.extend(["-rtsp_transport", "tcp"])\n'
+    "        input_cmd = shlex.split(str(input_source))"
+)
+if "rtsp_transport" not in src:
+    assert old in src, "haffmpeg core.py pattern not found"
+    cp.write_text(src.replace(old, new, 1))
+    print("patched haffmpeg core.py")
+else:
+    print("haffmpeg core.py already patched")
+PY
+
 ## Setup Home Assistant Core
 COPY --parents LICENSE* README* homeassistant/ pyproject.toml homeassistant/
 RUN \
