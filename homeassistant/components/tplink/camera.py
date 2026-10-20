@@ -141,8 +141,13 @@ class TPLinkCameraEntity(CoordinatedTPLinkModuleEntity, Camera):
     @override
     async def stream_source(self) -> str | None:
         """Return the source of the stream."""
+        # Use the SD stream for the live view. The HD stream is H.264 High
+        # profile level 5.0 at 1440p, which most browsers cannot
+        # hardware-decode, so the HLS live view loads but never plays. The
+        # SD stream (360p, level 2.2) is universally decodable and is fine
+        # for a dashboard live-view tile.
         return self._camera_module.stream_rtsp_url(
-            self._camera_credentials, stream_resolution=StreamResolution.HD
+            self._camera_credentials, stream_resolution=StreamResolution.SD
         )
 
     async def _async_check_stream_auth(self, video_url: str) -> None:
