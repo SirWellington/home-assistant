@@ -141,14 +141,12 @@ class TPLinkCameraEntity(CoordinatedTPLinkModuleEntity, Camera):
     @override
     async def stream_source(self) -> str | None:
         """Return the source of the stream."""
-        # Use the SD stream for the live view. The HD stream is H.264 High
-        # profile level 5.0 at 1440p, which most browsers cannot
-        # hardware-decode, so the HLS live view loads but never plays. The
-        # SD stream (360p, level 2.2) is universally decodable and is fine
-        # for a dashboard live-view tile.
-        return self._camera_module.stream_rtsp_url(
-            self._camera_credentials, stream_resolution=StreamResolution.SD
-        )
+        # The camera's native HD stream is H.264 High profile level 5.0 at
+        # 1440p, which most browsers cannot hardware-decode, so the HLS live
+        # view loads but never plays. go2rtc (on the ha-net) transcodes that
+        # 1440p stream to 1080p H.264 level 4.x, which the browser can decode.
+        # Point the live view at the go2rtc 1080p output.
+        return "rtsp://go2rtc:8554/tapo_master_1080p"
 
     async def _async_check_stream_auth(self, video_url: str) -> None:
         """Check for an auth error and start reauth flow."""
