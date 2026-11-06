@@ -46,7 +46,7 @@ COPY requirements_all.txt home_assistant_frontend-* home_assistant_intents-* hom
 RUN curl -fsSL \
     -o homeassistant/home_assistant_frontend-20260930.5-py3-none-any.whl \
     "https://github.com/SirWellington/home-assistant/releases/download/frontend-20260930.5/home_assistant_frontend-20260930.5-py3-none-any.whl" \
-    && echo "7a8df6b0728ed4cc2cc450616fe5f6a1900485538aafd921725712c9a0b13f9f  homeassistant/home_assistant_frontend-20260930.5-py3-none-any.whl" | sha256sum -c -
+    && echo "a98e773ac8777b1690af95dab6e8b52492d37621abfe4720945d44819b3c3e4e  homeassistant/home_assistant_frontend-20260930.5-py3-none-any.whl" | sha256sum -c -
 RUN \
     if ls homeassistant/home_assistant_*.whl 1> /dev/null 2>&1; then \
         uv pip install homeassistant/home_assistant_*.whl; \
